@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- 부트 스트랩 css -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x"
+      crossorigin="anonymous"
+    />
+    <link href="main.css" rel="stylesheet" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <!-- GNB -->
+    <nav class="navbar navbar-expand-lg bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Navbar</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Link</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Dropdown
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">Action</a></li>
+                <li><a class="dropdown-item" href="#">Another action</a></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a class="dropdown-item" href="#">Something else here</a>
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link disabled">Disabled</a>
+            </li>
+          </ul>
+          <span class="ms-auto mx-2" id="userName"></span>
+          <form class="d-flex" role="search">
+            <input
+              class="form-control me-2"
+              type="search"
+              placeholder="Search"
+              aria-label="Search"
+            />
+            <button class="btn btn-outline-success" type="submit">
+              Search
+            </button>
+          </form>
+        </div>
+      </div>
+    </nav>
+
+    <!-- upload 폼 -->
+    <div class="container mt-3">
+      <input
+        type="text"
+        class="form-control mt-2"
+        id="title"
+        placeholder="title"
+      />
+      <textarea class="form-control mt-2" id="content">content</textarea>
+      <input
+        type="text"
+        class="form-control mt-2"
+        id="price"
+        placeholder="price"
+      />
+      <button class="btn btn-danger mt-3" id="send">올리기</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-storage.js"></script>
+
+    <!-- 부트 스트랩 JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- jquery cdn 사용 -->
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+      integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyCglWQwFQcp2A0OuYuwjJB4CoYOHliGzJE",
+        authDomain: "carrotmarket-a87de.firebaseapp.com",
+        projectId: "carrotmarket-a87de",
+        storageBucket: "carrotmarket-a87de.appspot.com",
+        messagingSenderId: "565972617356",
+        appId: "1:565972617356:web:4be6decf17237e3f63d3a9",
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+    </script>
+
+    <script>
+      // Firebase 초기화 및 firestore 객체 가져오기
+      const db = firebase.firestore();
+      // storage 객체 가져오기
+      const storage = firebase.storage();
+
+      // nav바에 이름 표시
+      var userInfo = localStorage.getItem("user");
+      if (userInfo != null){
+        $('#userName').html(JSON.parse(userInfo).displayName);
+      }
+
+      $(document).ready(function () {
+        // 쿼리 스트링에서 id 값을 가져옴
+        var queryString = new URLSearchParams(window.location.search);
+        var productId = queryString.get("id");
+
+        // Firestore에서 해당 id의 상품 정보를 가져옴
+        db.collection("products")
+            .doc(productId)
+            .get()
+            .then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                // 가져온 상품 정보를 input 요소에 채워 넣음
+                $("#title").val(data.productName);
+                $("#content").val(data.productDetail);
+                $("#price").val(data.productPrice);
+            } else {
+                console.log("No such document!");
+            }
+            })
+            .catch((error) => {
+            console.log("Error getting document:", error);
+            });
+
+        // 올리기 버튼 클릭 이벤트
+        $('#send').click(function() {
+            // 입력된 값을 가져옴
+            const updatedTitle = $('#title').val();
+            const updatedContent = $('#content').val();
+            const updatedPrice = $('#price').val();
+
+            // Firestore에 업데이트
+            db.collection('products').doc(productId).update({
+              productName: updatedTitle,
+              productDetail: updatedContent,
+              productPrice: updatedPrice
+            }).then(() => {
+            alert('상품 정보가 성공적으로 업데이트되었습니다.');
+            // 업데이트 후 다른 페이지로 이동하거나 추가적인 동작을 수행
+            }).catch((error) => {
+            console.error('Error updating document: ', error);
+            });
+        });
+    });
+
+    </script>
+  </body>
+</html>
